@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoodQuest | Privacy-First Mood Tracker</title>
+    <title>MoodQuest | Cloud Sync Mood Tracker</title>
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -16,7 +15,6 @@
             --primary: #6366f1;
             --secondary: #a855f7;
             --bg: #0f172a;
-            --card: #1e293b;
         }
         body {
             background-color: var(--bg);
@@ -52,58 +50,113 @@
             position: fixed;
             inset: 0;
             z-index: 100;
-            background: var(--bg);
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 1.5rem;
         }
         .hidden { display: none !important; }
-        @keyframes bounce-in {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); }
+        .auth-card {
+            animation: slideUp 0.4s ease-out;
         }
-        .animate-pop { animation: bounce-in 0.5s ease-out forwards; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="pb-20">
 
-    <!-- Auth / PIN Screen -->
+    <!-- AUTHENTICATION PAGES -->
     <div id="auth-screen">
-        <div class="max-w-xs w-full p-6 glass rounded-3xl text-center">
-            <div class="mb-6">
-                <i class="fas fa-shield-halved text-4xl text-indigo-400 mb-2"></i>
-                <h2 id="auth-title" class="text-xl font-bold">Secure Access</h2>
-                <p id="auth-subtitle" class="text-gray-400 text-sm">Enter PIN to unlock MoodQuest</p>
+        <!-- Main Auth Card -->
+        <div id="auth-container" class="max-w-sm w-full p-8 glass rounded-3xl text-center space-y-6 auth-card">
+            
+            <!-- Login View -->
+            <div id="view-login" class="space-y-4">
+                <i class="fas fa-dragon text-5xl text-indigo-500 mb-2"></i>
+                <h2 class="text-2xl font-bold">Welcome Back</h2>
+                <p class="text-slate-400 text-sm">Log in to sync your mood journey</p>
+                <div class="space-y-3 mt-4">
+                    <input type="email" id="login-email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="handleEmailAuth('login')" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition">Log In</button>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 px-1">
+                    <button onclick="switchAuthMode('signup')" class="hover:text-indigo-400">Create Account</button>
+                    <button onclick="switchAuthMode('forgot')" class="hover:text-indigo-400">Forgot Password?</button>
+                </div>
             </div>
-            <div class="flex justify-center gap-3 mb-6" id="pin-dots">
-                <div class="w-3 h-3 rounded-full bg-slate-700"></div>
-                <div class="w-3 h-3 rounded-full bg-slate-700"></div>
-                <div class="w-3 h-3 rounded-full bg-slate-700"></div>
-                <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+
+            <!-- Sign Up View -->
+            <div id="view-signup" class="hidden space-y-4">
+                <i class="fas fa-sparkles text-5xl text-amber-400 mb-2"></i>
+                <h2 class="text-2xl font-bold">New Journey</h2>
+                <p class="text-slate-400 text-sm">Start tracking your mental XP today</p>
+                <div class="space-y-3 mt-4">
+                    <input type="email" id="signup-email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="handleEmailAuth('signup')" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition">Sign Up</button>
+                </div>
+                <button onclick="switchAuthMode('login')" class="text-xs text-slate-400 hover:text-indigo-400">Already have an account? Log In</button>
             </div>
-            <div class="grid grid-cols-3 gap-4" id="pin-pad">
-                <!-- JS generated buttons -->
+
+            <!-- Forgot Password View -->
+            <div id="view-forgot" class="hidden space-y-4">
+                <i class="fas fa-key text-5xl text-slate-400 mb-2"></i>
+                <h2 class="text-2xl font-bold">Reset Password</h2>
+                <p class="text-slate-400 text-sm">We'll send a link to your email</p>
+                <div class="space-y-3 mt-4">
+                    <input type="email" id="forgot-email" placeholder="Enter your email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="handleResetPassword()" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold transition">Send Reset Link</button>
+                </div>
+                <button onclick="switchAuthMode('login')" class="text-xs text-slate-400 hover:text-indigo-400">Back to Login</button>
             </div>
-            <button id="reset-data-btn" class="mt-8 text-xs text-red-400 underline opacity-50 hover:opacity-100">Forgot PIN / Reset All</button>
+
+            <!-- Social/Guest Options (Common) -->
+            <div id="auth-social" class="space-y-4 pt-4 border-t border-slate-800">
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-slate-900 px-2 text-slate-500">Or</span></div>
+                <div class="flex gap-2">
+                    <button onclick="handleGoogleAuth()" class="flex-1 bg-white text-slate-900 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa/google.svg" class="w-4 h-4"> Google
+                    </button>
+                    <button onclick="handleGuestAuth()" class="flex-1 bg-slate-800 text-slate-200 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-700 transition">
+                        <i class="fas fa-user-secret"></i> Guest
+                    </button>
+                </div>
+            </div>
+
+            <!-- PIN Card (Internal App Protection) -->
+            <div id="pin-card" class="hidden space-y-6">
+                <div>
+                    <i class="fas fa-lock text-4xl text-indigo-400 mb-2"></i>
+                    <h2 id="pin-title" class="text-xl font-bold">Security PIN</h2>
+                    <p id="pin-subtitle" class="text-gray-400 text-sm">Enter PIN to access your logs</p>
+                </div>
+                <div class="flex justify-center gap-3" id="pin-dots">
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-4" id="pin-pad"></div>
+                <button onclick="logout()" class="text-xs text-slate-500 hover:text-red-400">Sign Out</button>
+            </div>
         </div>
     </div>
 
-    <!-- Main Navigation -->
+    <!-- MAIN APP UI -->
     <nav class="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 z-50 px-6 py-3">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <button onclick="showView('home')" class="nav-link text-indigo-400"><i class="fas fa-home text-xl"></i></button>
-            <button onclick="showView('stats')" class="nav-link text-slate-400"><i class="fas fa-chart-line text-xl"></i></button>
-            <button onclick="showView('quest')" class="nav-link text-slate-400"><i class="fas fa-dragon text-xl"></i></button>
-            <button onclick="showView('profile')" class="nav-link text-slate-400"><i class="fas fa-user-shield text-xl"></i></button>
+            <button onclick="showView('home')" class="nav-link text-indigo-400 p-2"><i class="fas fa-home text-xl"></i></button>
+            <button onclick="showView('stats')" class="nav-link text-slate-400 p-2"><i class="fas fa-chart-line text-xl"></i></button>
+            <button onclick="showView('quest')" class="nav-link text-slate-400 p-2"><i class="fas fa-dragon text-xl"></i></button>
+            <button onclick="showView('profile')" class="nav-link text-slate-400 p-2"><i class="fas fa-user-shield text-xl"></i></button>
         </div>
     </nav>
 
-    <!-- App Container -->
     <main class="max-w-md mx-auto p-6 space-y-6">
-        
-        <!-- Header / Level Info -->
         <header class="flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold">MoodQuest</h1>
@@ -117,571 +170,265 @@
             </div>
         </header>
 
-        <!-- View: Home -->
+        <!-- Dynamic Views (Home, Stats, Quest, Profile) -->
         <section id="view-home" class="space-y-6">
             <div class="glass p-6 rounded-3xl text-center">
                 <h2 class="text-lg font-medium mb-4">How are you feeling?</h2>
                 <div class="flex justify-between items-center mb-6">
-                    <button class="mood-btn text-4xl filter grayscale hover:grayscale-0 transition" onclick="selectMood(1, '😢')">😢</button>
-                    <button class="mood-btn text-4xl filter grayscale hover:grayscale-0 transition" onclick="selectMood(2, '😕')">😕</button>
-                    <button class="mood-btn text-4xl filter grayscale hover:grayscale-0 transition" onclick="selectMood(3, '😐')">😐</button>
-                    <button class="mood-btn text-4xl filter grayscale hover:grayscale-0 transition" onclick="selectMood(4, '🙂')">🙂</button>
-                    <button class="mood-btn text-4xl filter grayscale hover:grayscale-0 transition" onclick="selectMood(5, '🤩')">🤩</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(1, '😢')">😢</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(2, '😕')">😕</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(3, '😐')">😐</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(4, '🙂')">🙂</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(5, '🤩')">🤩</button>
                 </div>
-                <textarea id="mood-note" placeholder="Write a tiny note... (optional)" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none mb-4 h-20"></textarea>
-                <button id="save-mood-btn" onclick="saveMood()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition-all">Complete Daily Quest</button>
-            </div>
-
-            <div id="daily-missions" class="space-y-3">
-                <h3 class="text-sm font-bold text-slate-400 px-1">DAILY MISSIONS</h3>
-                <div id="mission-list" class="space-y-2">
-                    <!-- Missions here -->
-                </div>
+                <textarea id="mood-note" placeholder="Write a tiny note..." class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none mb-4 h-20"></textarea>
+                <button id="save-mood-btn" onclick="saveMood()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition">Log Entry</button>
             </div>
         </section>
 
-        <!-- View: Stats -->
         <section id="view-stats" class="hidden space-y-6">
             <div class="glass p-6 rounded-3xl">
-                <h2 class="text-lg font-bold mb-4">Mood Trends</h2>
-                <div class="h-64">
-                    <canvas id="moodChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-6">
-                    <div class="bg-slate-800/50 p-4 rounded-2xl text-center">
-                        <p class="text-xs text-slate-400">Avg Mood</p>
-                        <p class="text-2xl font-bold" id="avg-mood">-</p>
-                    </div>
-                    <div class="bg-slate-800/50 p-4 rounded-2xl text-center">
-                        <p class="text-xs text-slate-400">Entries</p>
-                        <p class="text-2xl font-bold" id="total-entries">0</p>
-                    </div>
-                </div>
+                <h3 class="font-bold mb-4">Mood Trends</h3>
+                <canvas id="moodChart" class="h-48"></canvas>
             </div>
         </section>
 
-        <!-- View: Quest -->
-        <section id="view-quest" class="hidden space-y-6">
-            <div class="glass p-6 rounded-3xl">
-                <h2 class="text-lg font-bold mb-4">Achievements</h2>
-                <div class="grid grid-cols-3 gap-4" id="badges-grid">
-                    <!-- Badges injected here -->
-                </div>
-            </div>
-            
-            <div id="badge-share-card" class="hidden glass p-6 rounded-3xl text-center border-2 border-indigo-500/30">
-                <div id="capture-area" class="bg-gradient-to-br from-indigo-900 to-slate-900 p-8 rounded-2xl mb-4">
-                    <div class="text-5xl mb-4" id="share-emoji">🏆</div>
-                    <h3 class="text-xl font-bold" id="share-title">Title</h3>
-                    <p class="text-indigo-300 text-sm" id="share-desc">Description</p>
-                    <div class="mt-4 pt-4 border-t border-white/10 text-[10px] uppercase tracking-tighter opacity-50">Generated by MoodQuest</div>
-                </div>
-                <button onclick="downloadBadge()" class="bg-white text-slate-900 px-6 py-2 rounded-full font-bold text-sm">Download & Share</button>
-            </div>
-        </section>
-
-        <!-- View: Profile/Settings -->
         <section id="view-profile" class="hidden space-y-6">
-            <div class="glass p-6 rounded-3xl space-y-6">
-                <div>
-                    <h2 class="text-lg font-bold mb-2">Privacy & Data</h2>
-                    <p class="text-sm text-slate-400">All data stays in your browser's IndexedDB.</p>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <label class="text-sm">Analytics (Opt-in)</label>
-                        <input type="checkbox" id="analytics-toggle" class="w-5 h-5 accent-indigo-500">
+            <div class="glass p-6 rounded-3xl space-y-4">
+                <div class="flex items-center gap-3 pb-4 border-b border-slate-800">
+                    <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-bold" id="prof-initial">?</div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-bold truncate" id="prof-name">Explorer</p>
+                        <p class="text-xs text-slate-500 truncate" id="prof-email">Guest Mode</p>
                     </div>
-                    
-                    <button onclick="exportData()" class="w-full bg-slate-700 py-3 rounded-xl font-medium text-sm">Export JSON Backup</button>
-                    
-                    <div>
-                        <label class="block text-xs text-slate-500 mb-1">Restore from Backup</label>
-                        <input type="file" id="import-file" onchange="importData(event)" class="text-xs block w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                    </div>
-                    
-                    <button onclick="changePin()" class="w-full border border-slate-700 py-3 rounded-xl font-medium text-sm">Change PIN</button>
-                    <button onclick="logout()" class="w-full text-red-400 text-sm font-medium">Lock Session</button>
                 </div>
+                <button onclick="logout()" class="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-3 rounded-xl font-medium text-sm hover:bg-red-500/20 transition">Sign Out</button>
             </div>
         </section>
-
     </main>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 glass rounded-full text-sm font-medium transition-all transform translate-y-[-100px] opacity-0 z-[60]"></div>
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 glass rounded-full text-sm font-medium transition-all transform translate-y-[-100px] opacity-0 z-[110]"></div>
 
-    <script>
-        /** * APP CONSTANTS & STATE 
-         */
-        const DB_NAME = 'MoodQuestDB';
-        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'moodquest-local';
-        let currentUser = null;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIG
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyCUUyK31aM60AIlc1sMMfziws5gkKfLE6o",
+            authDomain: "moodquest-476b9.firebaseapp.com",
+            projectId: "moodquest-476b9",
+            storageBucket: "moodquest-476b9.firebasestorage.app",
+            messagingSenderId: "663831947224",
+            appId: "1:663831947224:web:513a0f1c6cf990b45ff4ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'moodquest-v1';
+
+        let currentUserProfile = null;
+        let currentLogs = [];
+        let pinBuffer = "";
+        let isSettingPin = false;
         let selectedMoodValue = 0;
         let chartInstance = null;
-        let pinBuffer = "";
-        let isSettingNewPin = false;
 
-        /**
-         * INDEXED DB WRAPPER
-         */
-        const dbPromise = new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, 2);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('logs')) {
-                    db.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
-                }
-                if (!db.objectStoreNames.contains('profile')) {
-                    db.createObjectStore('profile', { keyPath: 'id' });
-                }
-            };
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+        // --- AUTH UI NAVIGATION ---
+
+        window.switchAuthMode = (mode) => {
+            const views = ['login', 'signup', 'forgot'];
+            views.forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById(`view-${mode}`).classList.remove('hidden');
+        };
+
+        // --- FIREBASE AUTH ACTIONS ---
+
+        window.handleEmailAuth = async (type) => {
+            const email = document.getElementById(`${type}-email`).value.trim();
+            const pass = document.getElementById(`${type}-password`).value;
+            if (!email || !pass) return showToast("Enter credentials");
+            
+            try {
+                if (type === 'signup') await createUserWithEmailAndPassword(auth, email, pass);
+                else await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) { showToast(e.message); }
+        };
+
+        window.handleGoogleAuth = async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { showToast(e.message); }
+        };
+
+        window.handleGuestAuth = async () => {
+            try { await signInAnonymously(auth); } catch (e) { showToast(e.message); }
+        };
+
+        window.handleResetPassword = async () => {
+            const email = document.getElementById('forgot-email').value.trim();
+            if (!email) return showToast("Enter your email");
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast("Reset link sent!");
+                switchAuthMode('login');
+            } catch (e) { showToast(e.message); }
+        };
+
+        // --- APP FLOW ---
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Clear and switch to PIN
+                document.getElementById('view-login').classList.add('hidden');
+                document.getElementById('view-signup').classList.add('hidden');
+                document.getElementById('view-forgot').classList.add('hidden');
+                document.getElementById('auth-social').classList.add('hidden');
+                document.getElementById('pin-card').classList.remove('hidden');
+                
+                // Safe UI naming
+                const name = user.displayName || (user.email ? user.email.split('@')[0] : 'Guest Explorer');
+                document.getElementById('prof-name').textContent = name;
+                document.getElementById('prof-email').textContent = user.email || 'Temporary Guest Account';
+                document.getElementById('prof-initial').textContent = name[0].toUpperCase();
+
+                // Profile & PIN Logic
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+                const snap = await getDoc(docRef);
+                
+                isSettingPin = !snap.exists();
+                document.getElementById('pin-title').textContent = isSettingPin ? "Set New PIN" : "Security PIN";
+                document.getElementById('pin-subtitle').textContent = isSettingPin ? "Choose 4 digits to lock your diary" : "Enter PIN to access your logs";
+                
+                renderPinPad();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('pin-card').classList.add('hidden');
+                document.getElementById('auth-social').classList.remove('hidden');
+                switchAuthMode('login');
+            }
         });
 
-        const store = {
-            async get(name, key) {
-                const db = await dbPromise;
-                return new Promise(res => {
-                    const req = db.transaction(name).objectStore(name).get(key);
-                    req.onsuccess = () => res(req.result);
-                });
-            },
-            async getAll(name) {
-                const db = await dbPromise;
-                return new Promise(res => {
-                    const req = db.transaction(name).objectStore(name).getAll();
-                    req.onsuccess = () => res(req.result);
-                });
-            },
-            async put(name, val) {
-                const db = await dbPromise;
-                return new Promise(res => {
-                    const tx = db.transaction(name, 'readwrite');
-                    tx.objectStore(name).put(val);
-                    tx.oncomplete = () => res();
-                });
-            },
-            async clear(name) {
-                const db = await dbPromise;
-                return new Promise(res => {
-                    const tx = db.transaction(name, 'readwrite');
-                    tx.objectStore(name).clear();
-                    tx.oncomplete = () => res();
-                });
-            }
-        };
-
-        /**
-         * CRYPTO HELPER (PIN Protection)
-         */
-        async function hashPin(pin, salt) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(pin + salt);
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            return btoa(String.fromCharCode(...new Uint8Array(hash)));
-        }
-
-        /**
-         * GAMIFICATION ENGINE
-         */
-        const QUEST = {
-            getXPForLevel: (lvl) => Math.floor(100 * Math.pow(1.5, lvl - 1)),
-            calculateProgress: (currentXP, level) => {
-                const prevXP = level === 1 ? 0 : QUEST.getXPForLevel(level - 1);
-                const nextXP = QUEST.getXPForLevel(level);
-                return Math.max(0, Math.min(100, ((currentXP - prevXP) / (nextXP - prevXP)) * 100));
-            },
-            checkLevelUp: (user) => {
-                let currentLevel = user.level;
-                while (user.xp >= QUEST.getXPForLevel(currentLevel)) {
-                    currentLevel++;
-                }
-                return currentLevel;
-            },
-            BADGES: [
-                { id: 'first_step', title: 'First Step', desc: 'Log your first mood', emoji: '🌱', req: (u, logs) => logs.length >= 1 },
-                { id: 'three_streak', title: 'Consistent', desc: 'Maintain a 3-day streak', emoji: '🔥', req: (u) => u.streak >= 3 },
-                { id: 'level_5', title: 'Apprentice', desc: 'Reach Level 5', emoji: '🛡️', req: (u) => u.level >= 5 },
-                { id: 'night_owl', title: 'Night Owl', desc: 'Log after 10 PM', emoji: '🦉', req: (u, logs) => logs.some(l => new Date(l.timestamp).getHours() >= 22) }
-            ]
-        };
-
-        /**
-         * UI CONTROLS
-         */
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.remove('opacity-0', 'translate-y-[-100px]');
-            setTimeout(() => t.classList.add('opacity-0', 'translate-y-[-100px]'), 3000);
-        }
-
-        function showView(view) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.replace('text-indigo-400', 'text-slate-400'));
-            
-            // Fixed event referencing
-            const target = event ? event.currentTarget : document.querySelector(`[onclick="showView('${view}')"]`);
-            if (target) target.classList.replace('text-slate-400', 'text-indigo-400');
-            
-            if (view === 'stats') renderChart();
-            if (view === 'quest') renderQuests();
-        }
-
-        /**
-         * AUTH & PIN LOGIC
-         */
-        async function initAuth() {
-            const profile = await store.get('profile', 'main');
-            const pinPad = document.getElementById('pin-pad');
-            pinPad.innerHTML = "";
-            
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '←'].forEach(val => {
+        const renderPinPad = () => {
+            const pad = document.getElementById('pin-pad');
+            pad.innerHTML = "";
+            [1,2,3,4,5,6,7,8,9,'C',0,'←'].forEach(v => {
                 const btn = document.createElement('button');
-                btn.className = "p-4 glass rounded-2xl font-bold text-xl hover:bg-slate-700 transition active:scale-95";
-                btn.textContent = val;
-                btn.onclick = () => handlePinInput(val);
-                pinPad.appendChild(btn);
+                btn.className = "p-4 glass rounded-2xl font-bold text-xl active:scale-95 transition";
+                btn.textContent = v;
+                btn.onclick = () => onPinKey(v);
+                pad.appendChild(btn);
             });
+        };
 
-            if (!profile) {
-                isSettingNewPin = true;
-                document.getElementById('auth-title').textContent = "Set Your PIN";
-                document.getElementById('auth-subtitle').textContent = "Pick a 4-digit code to keep logs private.";
-            }
-        }
-
-        async function handlePinInput(val) {
-            if (val === 'C') pinBuffer = "";
-            else if (val === '←') pinBuffer = pinBuffer.slice(0, -1);
-            else if (pinBuffer.length < 4) pinBuffer += val;
+        const onPinKey = async (v) => {
+            if (v === 'C') pinBuffer = "";
+            else if (v === '←') pinBuffer = pinBuffer.slice(0, -1);
+            else if (pinBuffer.length < 4) pinBuffer += v;
 
             const dots = document.getElementById('pin-dots').children;
-            for (let i = 0; i < 4; i++) {
-                dots[i].className = i < pinBuffer.length ? "w-3 h-3 rounded-full bg-indigo-400 shadow-[0_0_8px_#818cf8]" : "w-3 h-3 rounded-full bg-slate-700";
-            }
+            for(let i=0; i<4; i++) dots[i].className = i < pinBuffer.length ? "w-3 h-3 rounded-full bg-indigo-400" : "w-3 h-3 rounded-full bg-slate-700";
 
             if (pinBuffer.length === 4) {
-                setTimeout(verifyPin, 200);
-            }
-        }
+                const user = auth.currentUser;
+                const path = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
 
-        async function verifyPin() {
-            const profile = await store.get('profile', 'main');
-            
-            if (isSettingNewPin) {
-                const salt = crypto.randomUUID();
-                const hash = await hashPin(pinBuffer, salt);
-                const newUser = {
-                    id: 'main',
-                    pinHash: hash,
-                    salt: salt,
-                    level: 1,
-                    xp: 0,
-                    streak: 0,
-                    lastLogDate: null,
-                    badges: [],
-                    analytics: false
-                };
-                await store.put('profile', newUser);
-                currentUser = newUser;
-                unlockApp();
-                showToast("Welcome to MoodQuest!");
-            } else {
-                const hash = await hashPin(pinBuffer, profile.salt);
-                if (hash === profile.pinHash) {
-                    currentUser = profile;
-                    unlockApp();
+                const hash = (p) => btoa(p); // Simple hash for demo
+
+                if (isSettingPin) {
+                    const profile = { pin: hash(pinBuffer), level: 1, xp: 0, streak: 0 };
+                    await setDoc(path, profile);
+                    currentUserProfile = profile;
+                    unlock();
                 } else {
-                    showToast("Incorrect PIN");
-                    pinBuffer = "";
-                    const dots = document.getElementById('pin-dots').children;
-                    for(let d of dots) d.className = "w-3 h-3 rounded-full bg-red-500";
-                    setTimeout(() => {
-                        for(let d of dots) d.className = "w-3 h-3 rounded-full bg-slate-700";
-                    }, 500);
+                    const snap = await getDoc(path);
+                    if (snap.data().pin === hash(pinBuffer)) {
+                        currentUserProfile = snap.data();
+                        unlock();
+                    } else {
+                        showToast("Wrong PIN");
+                        pinBuffer = "";
+                        onPinKey('');
+                    }
                 }
             }
-        }
+        };
 
-        function unlockApp() {
+        const unlock = () => {
             document.getElementById('auth-screen').classList.add('hidden');
-            updateUserUI();
-            checkDailyStatus();
-        }
+            setupSync();
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        };
 
-        function logout() {
-            location.reload();
-        }
-
-        /**
-         * CORE APP LOGIC
-         */
-        function selectMood(val, emoji) {
-            selectedMoodValue = val;
-            document.querySelectorAll('.mood-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent === emoji);
-                btn.classList.toggle('grayscale-0', btn.textContent === emoji);
+        const setupSync = () => {
+            const user = auth.currentUser;
+            onSnapshot(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main'), s => {
+                if(s.exists()) { currentUserProfile = s.data(); updateUI(); }
             });
-        }
-
-        async function saveMood() {
-            if (selectedMoodValue === 0) return showToast("Select a mood first!");
-            
-            const logs = await store.getAll('logs');
-            const today = new Date().toDateString();
-            if (logs.some(l => new Date(l.timestamp).toDateString() === today)) {
-                return showToast("Already quested today!");
-            }
-
-            const note = document.getElementById('mood-note').value;
-            const newLog = {
-                timestamp: Date.now(),
-                value: selectedMoodValue,
-                note: note
-            };
-
-            await store.put('logs', newLog);
-            
-            // Gamification Update
-            let xpGained = 10;
-            const lastDate = currentUser.lastLogDate ? new Date(currentUser.lastLogDate).toDateString() : null;
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            if (lastDate === yesterday.toDateString()) {
-                currentUser.streak++;
-                xpGained += Math.min(20, currentUser.streak * 2); // Streak bonus
-            } else if (lastDate !== today) {
-                currentUser.streak = 1;
-            }
-
-            currentUser.xp += xpGained;
-            currentUser.lastLogDate = Date.now();
-            
-            const newLevel = QUEST.checkLevelUp(currentUser);
-            if (newLevel > currentUser.level) {
-                currentUser.level = newLevel;
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                showToast(`Level Up! You are now LVL ${newLevel}`);
-            }
-
-            // Check badges
-            const currentLogs = await store.getAll('logs');
-            QUEST.BADGES.forEach(b => {
-                if (!currentUser.badges.includes(b.id) && b.req(currentUser, currentLogs)) {
-                    currentUser.badges.push(b.id);
-                    showToast(`Unlocked Badge: ${b.title}!`);
-                }
+            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'logs'), s => {
+                currentLogs = s.docs.map(d => d.data()).sort((a,b) => b.timestamp - a.timestamp);
+                if(!document.getElementById('view-stats').classList.contains('hidden')) renderChart();
             });
+        };
 
-            await store.put('profile', currentUser);
-            updateUserUI();
-            showToast(`Mood logged! +${xpGained} XP`);
+        window.showView = (v) => {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`view-${v}`).classList.remove('hidden');
+            if(v === 'stats') setTimeout(renderChart, 100);
+        };
+
+        window.selectMood = (v, e) => {
+            selectedMoodValue = v;
+            document.querySelectorAll('.mood-btn').forEach(b => {
+                const active = b.textContent === e;
+                b.classList.toggle('active', active);
+                b.classList.toggle('grayscale', !active);
+            });
+        };
+
+        window.saveMood = async () => {
+            if(!selectedMoodValue) return showToast("Select a mood");
+            const log = { timestamp: Date.now(), value: selectedMoodValue, note: document.getElementById('mood-note').value };
+            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'logs', log.timestamp.toString()), log);
             
-            // Clear inputs
+            currentUserProfile.xp += 20;
+            currentUserProfile.streak = (currentUserProfile.streak || 0) + 1;
+            if(currentUserProfile.xp >= 100) { currentUserProfile.level++; currentUserProfile.xp = 0; }
+            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'main'), currentUserProfile);
+            
+            showToast("Logged!");
             selectedMoodValue = 0;
             document.getElementById('mood-note').value = "";
-            document.querySelectorAll('.mood-btn').forEach(btn => {
-                btn.classList.remove('active', 'grayscale-0');
-            });
-            checkDailyStatus();
-        }
+        };
 
-        async function updateUserUI() {
-            document.getElementById('level-val').textContent = currentUser.level;
-            document.getElementById('header-streak').textContent = `${currentUser.streak} Day Streak`;
-            const progress = QUEST.calculateProgress(currentUser.xp, currentUser.level);
-            document.getElementById('xp-fill').style.width = `${progress}%`;
-            document.getElementById('analytics-toggle').checked = currentUser.analytics;
-        }
+        window.logout = () => signOut(auth).then(() => location.reload());
 
-        async function checkDailyStatus() {
-            const logs = await store.getAll('logs');
-            const today = new Date().toDateString();
-            const done = logs.some(l => new Date(l.timestamp).toDateString() === today);
-            
-            const btn = document.getElementById('save-mood-btn');
-            if (done) {
-                btn.disabled = true;
-                btn.textContent = "Daily Quest Complete ✓";
-                btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
-                btn.classList.add('bg-emerald-600');
-            } else {
-                btn.disabled = false;
-                btn.textContent = "Complete Daily Quest";
-                btn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
-                btn.classList.remove('bg-emerald-600');
-            }
+        const updateUI = () => {
+            document.getElementById('level-val').textContent = currentUserProfile.level;
+            document.getElementById('xp-fill').style.width = `${currentUserProfile.xp}%`;
+            document.getElementById('header-streak').textContent = `${currentUserProfile.streak} Day Streak`;
+        };
 
-            const mList = document.getElementById('mission-list');
-            mList.innerHTML = `
-                <div class="glass p-4 rounded-2xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full ${done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-500'} flex items-center justify-center">
-                            <i class="fas fa-check text-xs"></i>
-                        </div>
-                        <span class="text-sm font-medium">Daily Reflection</span>
-                    </div>
-                    <span class="text-xs font-bold text-indigo-400">+10 XP</span>
-                </div>
-            `;
-        }
-
-        /**
-         * CHARTS
-         */
-        async function renderChart() {
-            const logs = await store.getAll('logs');
-            const recent = logs.slice(-7);
-            const canvas = document.getElementById('moodChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            
-            if (chartInstance) chartInstance.destroy();
-
-            // Stats update
-            const total = logs.length;
-            const avg = total > 0 ? (logs.reduce((acc, curr) => acc + curr.value, 0) / total).toFixed(1) : '-';
-            document.getElementById('total-entries').textContent = total;
-            document.getElementById('avg-mood').textContent = avg;
-
+        const renderChart = () => {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            const recent = currentLogs.slice(0, 7).reverse();
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: recent.map(l => new Date(l.timestamp).toLocaleDateString(undefined, {weekday: 'short'})),
-                    datasets: [{
-                        label: 'Mood Level',
-                        data: recent.map(l => l.value),
-                        borderColor: '#818cf8',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#818cf8',
-                        pointRadius: 5
-                    }]
+                    labels: recent.map(l => new Date(l.timestamp).toLocaleDateString(undefined, {weekday:'short'})),
+                    datasets: [{ data: recent.map(l => l.value), borderColor: '#6366f1', tension: 0.4 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { min: 1, max: 5, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } },
-                        x: { grid: { display: false } }
-                    }
-                }
+                options: { plugins: { legend: { display: false } }, scales: { y: { min: 1, max: 5 } } }
             });
-        }
-
-        /**
-         * BADGES & SHARING
-         */
-        async function renderQuests() {
-            const grid = document.getElementById('badges-grid');
-            grid.innerHTML = "";
-            
-            QUEST.BADGES.forEach(b => {
-                const unlocked = currentUser.badges.includes(b.id);
-                const el = document.createElement('div');
-                el.className = `p-4 glass rounded-2xl text-center cursor-pointer transition ${unlocked ? 'opacity-100 hover:scale-105' : 'opacity-30'}`;
-                el.innerHTML = `
-                    <div class="text-3xl mb-1">${b.emoji}</div>
-                    <p class="text-[10px] font-bold uppercase truncate">${b.title}</p>
-                `;
-                if (unlocked) {
-                    el.onclick = () => previewBadge(b);
-                }
-                grid.appendChild(el);
-            });
-        }
-
-        function previewBadge(badge) {
-            const card = document.getElementById('badge-share-card');
-            card.classList.remove('hidden');
-            document.getElementById('share-emoji').textContent = badge.emoji;
-            document.getElementById('share-title').textContent = badge.title;
-            document.getElementById('share-desc').textContent = badge.desc;
-            card.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function downloadBadge() {
-            const element = document.getElementById('capture-area');
-            const canvas = await html2canvas(element, { backgroundColor: null });
-            const link = document.createElement('a');
-            link.download = `MoodQuest-Badge-${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            showToast("Badge downloaded!");
-        }
-
-        /**
-         * DATA MANAGEMENT
-         */
-        async function exportData() {
-            const logs = await store.getAll('logs');
-            const data = {
-                profile: currentUser,
-                logs: logs,
-                exportedAt: new Date().toISOString()
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `moodquest-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-        }
-
-        function importData(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    if (!data.profile || !data.logs) throw new Error("Invalid format");
-                    
-                    await store.put('profile', data.profile);
-                    await store.clear('logs');
-                    for (let log of data.logs) {
-                        await store.put('logs', log);
-                    }
-                    showToast("Data restored successfully! Restarting...");
-                    setTimeout(() => location.reload(), 2000);
-                } catch (err) {
-                    showToast("Error importing data.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        async function changePin() {
-            isSettingNewPin = true;
-            pinBuffer = "";
-            document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('auth-title').textContent = "Set New PIN";
-            initAuth();
-        }
-
-        // Reset Data flow
-        document.getElementById('reset-data-btn').onclick = async () => {
-            if (confirm("THIS WILL WIPE EVERYTHING. Are you sure?")) {
-                await store.clear('profile');
-                await store.clear('logs');
-                location.reload();
-            }
         };
 
-        // Initialize App
-        window.onload = initAuth;
-
-        // PWA functionality (Disabled Service Worker registration due to restricted sandbox protocol support)
-        // In a standard hosting environment (Netlify/Vercel), you would use:
-        // navigator.serviceWorker.register('/sw.js');
+        const showToast = (m) => {
+            const t = document.getElementById('toast');
+            t.textContent = m;
+            t.classList.remove('opacity-0', 'translate-y-[-100px]');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-[-100px]'), 3000);
+        };
     </script>
 </body>
 </html>
