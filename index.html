@@ -78,6 +78,488 @@
                 <h2 class="text-2xl font-bold">Welcome Back</h2>
                 <p class="text-slate-400 text-sm">Sync your mood across devices</p>
 
+                <!-- Google Login -->
+                <button onclick="handleGoogleAuth()" class="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-100 transition shadow-lg shadow-white/5">
+                    <i class="fa-brands fa-google text-lg"></i>
+                    <span>Continue with Google</span>
+                </button>
+
+                <div class="relative py-2">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+                    <div class="relative flex justify-center text-[10px] uppercase tracking-widest"><span class="bg-slate-900/80 backdrop-blur px-2 text-slate-500">Or use email</span></div>
+                </div>
+
+                <div class="space-y-3">
+                    <input type="email" id="login-email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <button onclick="handleEmailAuth('login')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold transition text-indigo-300">Log In</button>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 px-1 pt-2">
+                    <button onclick="switchAuthMode('signup')" class="hover:text-white transition">Create Account</button>
+                    <button onclick="switchAuthMode('forgot')" class="hover:text-white transition">Forgot Password?</button>
+                </div>
+            </div>
+
+            <!-- Sign Up View -->
+            <div id="view-signup" class="hidden space-y-4">
+                <i class="fas fa-sparkles text-5xl text-amber-400 mb-2"></i>
+                <h2 class="text-2xl font-bold">New Journey</h2>
+                <p class="text-slate-400 text-sm">Start tracking your mental XP today</p>
+                
+                <button onclick="handleGoogleAuth()" class="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-100 transition shadow-lg shadow-white/5">
+                    <i class="fa-brands fa-google text-lg"></i>
+                    <span>Sign up with Google</span>
+                </button>
+
+                <div class="relative py-2">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+                    <div class="relative flex justify-center text-[10px] uppercase tracking-widest"><span class="bg-slate-900/80 backdrop-blur px-2 text-slate-500">Or use email</span></div>
+                </div>
+
+                <div class="space-y-3">
+                    <input type="email" id="signup-email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <button onclick="handleEmailAuth('signup')" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold transition text-indigo-300">Create Account</button>
+                </div>
+                <button onclick="switchAuthMode('login')" class="text-xs text-slate-400 hover:text-white transition mt-2">Already have an account? Log In</button>
+            </div>
+
+            <!-- Forgot Password View -->
+            <div id="view-forgot" class="hidden space-y-4">
+                <i class="fas fa-key text-5xl text-slate-400 mb-2"></i>
+                <h2 class="text-2xl font-bold">Reset Password</h2>
+                <p class="text-slate-400 text-sm">We'll send a link to your email</p>
+                <div class="space-y-3 mt-4">
+                    <input type="email" id="forgot-email" placeholder="Enter your email" class="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="handleResetPassword()" class="w-full bg-slate-700 hover:bg-slate-600 py-3 rounded-xl font-bold transition">Send Reset Link</button>
+                </div>
+                <button onclick="switchAuthMode('login')" class="text-xs text-slate-400 hover:text-white transition">Back to Login</button>
+            </div>
+
+            <!-- PIN Card -->
+            <div id="pin-card" class="hidden space-y-6">
+                <div>
+                    <i class="fas fa-lock text-4xl text-indigo-400 mb-2"></i>
+                    <h2 id="pin-title" class="text-xl font-bold">Security PIN</h2>
+                    <p id="pin-subtitle" class="text-gray-400 text-sm">Enter PIN to access your logs</p>
+                </div>
+                <div class="flex justify-center gap-3" id="pin-dots">
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                    <div class="w-3 h-3 rounded-full bg-slate-700"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-4" id="pin-pad"></div>
+                <button id="pin-cancel-btn" onclick="cancelPinSetup()" class="hidden text-xs text-slate-500 hover:text-red-400">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP UI -->
+    <nav class="fixed bottom-0 left-0 right-0 glass border-t border-slate-800 z-50 px-6 py-3">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <button onclick="showView('home')" class="nav-link text-indigo-400 p-2"><i class="fas fa-home text-xl"></i></button>
+            <button onclick="showView('stats')" class="nav-link text-slate-400 p-2"><i class="fas fa-chart-line text-xl"></i></button>
+            <button onclick="showView('quest')" class="nav-link text-slate-400 p-2"><i class="fas fa-dragon text-xl"></i></button>
+            <button onclick="showView('profile')" class="nav-link text-slate-400 p-2"><i class="fas fa-user-shield text-xl"></i></button>
+        </div>
+    </nav>
+
+    <main class="max-w-md mx-auto p-6 space-y-6">
+        <header class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">MoodQuest</h1>
+                <p class="text-slate-400 text-xs uppercase tracking-widest font-semibold" id="header-streak">0 Day Streak</p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-indigo-300 font-bold">LVL <span id="level-val">1</span></span>
+                <div class="xp-bar w-24 mt-1">
+                    <div id="xp-fill" class="xp-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <section id="view-home" class="space-y-6">
+            <div class="glass p-6 rounded-3xl text-center">
+                <h2 class="text-lg font-medium mb-4">How are you feeling?</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(1, '😢')">😢</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(2, '😕')">😕</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(3, '😐')">😐</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(4, '🙂')">🙂</button>
+                    <button class="mood-btn text-4xl grayscale hover:grayscale-0 transition" onclick="selectMood(5, '🤩')">🤩</button>
+                </div>
+                <textarea id="mood-note" placeholder="Write a tiny note..." class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none mb-4 h-20"></textarea>
+                <button id="save-mood-btn" onclick="saveMood()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition">Log Entry</button>
+            </div>
+        </section>
+
+        <section id="view-stats" class="hidden space-y-6">
+            <div class="glass p-6 rounded-3xl">
+                <h3 class="font-bold mb-4">Mood Trends</h3>
+                <canvas id="moodChart" class="h-48"></canvas>
+            </div>
+        </section>
+
+        <section id="view-quest" class="hidden space-y-6">
+             <div class="glass p-6 rounded-3xl text-center">
+                <i class="fas fa-rocket text-4xl text-indigo-400 mb-4"></i>
+                <h3 class="font-bold">Quests Coming Soon</h3>
+                <p class="text-sm text-slate-400 mt-2">Level up to unlock daily missions!</p>
+            </div>
+        </section>
+
+        <section id="view-profile" class="hidden space-y-6">
+            <div class="glass p-6 rounded-3xl space-y-4">
+                <div class="flex items-center gap-4 border-b border-slate-800 pb-4">
+                    <img id="prof-img" src="" class="w-16 h-16 rounded-full object-cover bg-indigo-600 hidden">
+                    <div id="prof-initial" class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold">?</div>
+                    <div class="overflow-hidden flex-1">
+                        <h3 class="font-bold text-lg truncate" id="prof-name">Explorer</h3>
+                        <p class="text-xs text-slate-500 truncate" id="prof-email">user@example.com</p>
+                    </div>
+                </div>
+                <div class="space-y-3 pt-2">
+                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Edit Profile</h4>
+                    <div>
+                        <label class="text-[10px] text-slate-500">Display Name</label>
+                        <input type="text" id="edit-name" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500">Photo URL</label>
+                        <input type="text" id="edit-photo" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg p-2 text-xs" placeholder="https://...">
+                    </div>
+                    <button onclick="updateUserProfile()" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-lg text-xs font-bold transition">Save Changes</button>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-3xl space-y-4">
+                <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Security</h4>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-sm">App PIN Lock</p>
+                        <p class="text-xs text-slate-500">Require PIN on startup</p>
+                    </div>
+                    <button id="setup-pin-btn" onclick="startPinSetup()" class="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-600/30 transition">
+                        Setup PIN
+                    </button>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full bg-red-500/10 text-red-400 border border-red-500/20 py-3 rounded-xl font-medium text-sm hover:bg-red-500/20 transition">Sign Out</button>
+        </section>
+    </main>
+
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 glass rounded-full text-sm font-medium transition-all transform translate-y-[-100px] opacity-0 z-[110]"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyCUUyK31aM60AIlc1sMMfziws5gkKfLE6o",
+            authDomain: "moodquest-476b9.firebaseapp.com",
+            projectId: "moodquest-476b9",
+            storageBucket: "moodquest-476b9.firebasestorage.app",
+            messagingSenderId: "663831947224",
+            appId: "1:663831947224:web:513a0f1c6cf990b45ff4ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'moodquest-v1';
+
+        let currentUserProfile = null;
+        let currentLogs = [];
+        let pinBuffer = "";
+        let pinMode = 'unlock';
+        let selectedMoodValue = 0;
+        let chartInstance = null;
+
+        window.switchAuthMode = (mode) => {
+            ['login', 'signup', 'forgot'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById(`view-${mode}`).classList.remove('hidden');
+        };
+
+        window.handleEmailAuth = async (type) => {
+            const email = document.getElementById(`${type}-email`).value.trim();
+            const pass = document.getElementById(`${type}-password`).value;
+            if (!email || !pass) return showToast("Enter credentials");
+            try {
+                if (type === 'signup') await createUserWithEmailAndPassword(auth, email, pass);
+                else await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) { showToast(e.message); }
+        };
+
+        window.handleGoogleAuth = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch (e) { 
+                console.error("Google Auth Error:", e);
+                // Handle unauthorized domain specifically
+                if (e.code === 'auth/unauthorized-domain') {
+                    const domain = window.location.hostname;
+                    alert(`ACCESS DENIED: Domain Unauthorized\n\nGoogle Login is failing because "${domain}" is not in your Firebase Authorized Domains.\n\nFIX:\n1. Go to Firebase Console > Authentication > Settings > Authorized Domains.\n2. Click "Add domain".\n3. Paste this domain exactly: ${domain}\n4. Save and try again.`);
+                } else if (e.code === 'auth/popup-closed-by-user') {
+                    showToast("Login cancelled");
+                } else {
+                    showToast("Login failed: " + e.code);
+                }
+            }
+        };
+
+        window.handleResetPassword = async () => {
+            const email = document.getElementById('forgot-email').value.trim();
+            if (!email) return showToast("Enter your email");
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast("Reset link sent!");
+                switchAuthMode('login');
+            } catch (e) { showToast(e.message); }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('edit-name').value = user.displayName || "";
+                document.getElementById('edit-photo').value = user.photoURL || "";
+                updateProfileUI(user);
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+                const snap = await getDoc(docRef);
+                if (!snap.exists()) {
+                    currentUserProfile = { level: 1, xp: 0, streak: 0 };
+                    await setDoc(docRef, currentUserProfile);
+                    unlockApp(); 
+                } else {
+                    currentUserProfile = snap.data();
+                    if (currentUserProfile.pinHash) showPinScreen('unlock');
+                    else unlockApp();
+                }
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('pin-card').classList.add('hidden');
+                document.getElementById('view-login').classList.remove('hidden');
+                document.getElementById('view-signup').classList.add('hidden');
+                document.getElementById('view-forgot').classList.add('hidden');
+            }
+        });
+
+        function updateProfileUI(user) {
+            const name = user.displayName || user.email.split('@')[0];
+            document.getElementById('prof-name').textContent = name;
+            document.getElementById('prof-email').textContent = user.email;
+            if(user.photoURL) {
+                const img = document.getElementById('prof-img');
+                img.src = user.photoURL;
+                img.classList.remove('hidden');
+                document.getElementById('prof-initial').classList.add('hidden');
+            } else {
+                document.getElementById('prof-img').classList.add('hidden');
+                const init = document.getElementById('prof-initial');
+                init.textContent = name[0].toUpperCase();
+                init.classList.remove('hidden');
+            }
+        }
+
+        window.updateUserProfile = async () => {
+            const name = document.getElementById('edit-name').value;
+            const photo = document.getElementById('edit-photo').value;
+            try {
+                await updateProfile(auth.currentUser, { displayName: name, photoURL: photo });
+                updateProfileUI(auth.currentUser);
+                showToast("Profile Updated!");
+            } catch (e) { showToast("Error updating profile"); }
+        };
+
+        window.startPinSetup = () => showPinScreen('setup');
+        window.cancelPinSetup = () => { document.getElementById('auth-screen').classList.add('hidden'); pinBuffer = ""; };
+
+        function showPinScreen(mode) {
+            pinMode = mode;
+            pinBuffer = "";
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+            ['login', 'signup', 'forgot'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById('pin-card').classList.remove('hidden');
+            const title = document.getElementById('pin-title');
+            const sub = document.getElementById('pin-subtitle');
+            const cancelBtn = document.getElementById('pin-cancel-btn');
+            if (mode === 'unlock') {
+                title.textContent = "Security PIN";
+                sub.textContent = "Enter PIN to unlock";
+                cancelBtn.classList.add('hidden');
+            } else {
+                title.textContent = "Set New PIN";
+                sub.textContent = "Enter a 4-digit code";
+                cancelBtn.classList.remove('hidden');
+            }
+            renderPinPad();
+        }
+
+        const renderPinPad = () => {
+            const pad = document.getElementById('pin-pad');
+            pad.innerHTML = "";
+            [1,2,3,4,5,6,7,8,9,'C',0,'←'].forEach(v => {
+                const btn = document.createElement('button');
+                btn.className = "w-full aspect-square glass rounded-xl font-bold text-xl text-white active:scale-95 transition bg-white/5 hover:bg-white/10 flex items-center justify-center";
+                btn.textContent = v;
+                btn.onclick = () => onPinKey(v);
+                pad.appendChild(btn);
+            });
+        };
+
+        const onPinKey = async (v) => {
+            if (v === 'C') pinBuffer = "";
+            else if (v === '←') pinBuffer = pinBuffer.slice(0, -1);
+            else if (pinBuffer.length < 4) pinBuffer += v;
+            const dots = document.getElementById('pin-dots').children;
+            for(let i=0; i<4; i++) {
+                dots[i].className = i < pinBuffer.length ? "w-3 h-3 rounded-full bg-indigo-400 shadow-[0_0_10px_#818cf8]" : "w-3 h-3 rounded-full bg-slate-700";
+            }
+            if (pinBuffer.length === 4) {
+                const hash = btoa(pinBuffer);
+                if (pinMode === 'setup') {
+                    currentUserProfile.pinHash = hash;
+                    await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'main'), currentUserProfile);
+                    showToast("PIN Enabled!");
+                    unlockApp();
+                } else if (pinMode === 'unlock') {
+                    if (currentUserProfile.pinHash === hash) unlockApp();
+                    else {
+                        showToast("Incorrect PIN");
+                        pinBuffer = "";
+                        for(let d of dots) d.className = "w-3 h-3 rounded-full bg-red-500";
+                        setTimeout(() => { for(let d of dots) d.className = "w-3 h-3 rounded-full bg-slate-700"; }, 300);
+                    }
+                }
+            }
+        };
+
+        function unlockApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            setupSync();
+            const pinBtn = document.getElementById('setup-pin-btn');
+            pinBtn.textContent = currentUserProfile.pinHash ? "Change PIN" : "Setup PIN";
+        }
+
+        const setupSync = () => {
+            const user = auth.currentUser;
+            if(!user) return;
+            onSnapshot(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main'), s => {
+                if(s.exists()) { currentUserProfile = s.data(); updateUI(); }
+            });
+            onSnapshot(collection(db, 'artifacts', appId, 'users', user.uid, 'logs'), s => {
+                currentLogs = s.docs.map(d => d.data()).sort((a,b) => b.timestamp - a.timestamp);
+                if(!document.getElementById('view-stats').classList.contains('hidden')) renderChart();
+            });
+        };
+
+        window.showView = (v) => {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`view-${v}`).classList.remove('hidden');
+            if(v === 'stats') setTimeout(renderChart, 100);
+        };
+
+        window.selectMood = (v, e) => {
+            selectedMoodValue = v;
+            document.querySelectorAll('.mood-btn').forEach(b => {
+                const active = b.textContent === e;
+                b.classList.toggle('active', active);
+                b.classList.toggle('grayscale', !active);
+            });
+        };
+
+        window.saveMood = async () => {
+            if(!selectedMoodValue) return showToast("Select a mood");
+            const log = { timestamp: Date.now(), value: selectedMoodValue, note: document.getElementById('mood-note').value };
+            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'logs', log.timestamp.toString()), log);
+            currentUserProfile.xp = (currentUserProfile.xp || 0) + 20;
+            currentUserProfile.streak = (currentUserProfile.streak || 0) + 1;
+            currentUserProfile.level = currentUserProfile.level || 1;
+            if(currentUserProfile.xp >= currentUserProfile.level * 100) { currentUserProfile.level++; confetti(); }
+            await setDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'profile', 'main'), currentUserProfile);
+            showToast("Logged!");
+            selectedMoodValue = 0;
+            document.querySelectorAll('.mood-btn').forEach(b => { b.classList.remove('active'); b.classList.add('grayscale'); });
+            document.getElementById('mood-note').value = "";
+        };
+
+        window.logout = () => signOut(auth).then(() => location.reload());
+
+        const updateUI = () => {
+            document.getElementById('level-val').textContent = currentUserProfile.level || 1;
+            const lvl = currentUserProfile.level || 1;
+            const progress = ((currentUserProfile.xp || 0) % (lvl * 100)) / (lvl * 100) * 100;
+            document.getElementById('xp-fill').style.width = `${progress}%`;
+            document.getElementById('header-streak').textContent = `${currentUserProfile.streak || 0} Day Streak`;
+        };
+
+        const renderChart = () => {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            const recent = currentLogs.slice(0, 7).reverse();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: recent.map(l => new Date(l.timestamp).toLocaleDateString(undefined, {weekday:'short'})),
+                    datasets: [{ data: recent.map(l => l.value), borderColor: '#6366f1', tension: 0.4, fill: false }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 1, max: 5 } } }
+            });
+        };
+
+        const showToast = (m) => {
+            const t = document.getElementById('toast');
+            t.textContent = m;
+            t.classList.remove('opacity-0', 'translate-y-[-100px]');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-[-100px]'), 3000);
+        };
+    </script>
+</body>
+</html>        }
+        .xp-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .xp-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease-out;
+        }
+        #auth-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .hidden { display: none !important; }
+        .auth-card {
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- AUTHENTICATION & PIN OVERLAY -->
+    <div id="auth-screen">
+        <div id="auth-container" class="max-w-sm w-full p-8 glass rounded-3xl text-center space-y-6 auth-card">
+            
+            <!-- Login View -->
+            <div id="view-login" class="space-y-4">
+                <i class="fas fa-dragon text-5xl text-indigo-500 mb-2"></i>
+                <h2 class="text-2xl font-bold">Welcome Back</h2>
+                <p class="text-slate-400 text-sm">Sync your mood across devices</p>
+
                 <!-- Google Login (Moved to Top) -->
                 <button onclick="handleGoogleAuth()" class="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-100 transition shadow-lg shadow-white/5">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa/google.svg" class="w-5 h-5">
